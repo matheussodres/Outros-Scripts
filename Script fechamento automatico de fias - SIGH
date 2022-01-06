@@ -1,0 +1,35 @@
+begin; 
+update sigh.ficha_amb_int
+set
+data_alta = (data_atendimento + 1),--sistema puxa dt atendimento e fecha +1=24h +2=48h
+hora_fim = hora_inicio,
+cod_mot_alta = (
+select
+id_mot_alta
+from
+sigh.motivos_altas
+where
+descr_mot_alta = 'ALTA MELHORADO' and ativo limit 1 --defini motivo de alta como  "alta melhorado"
+),
+cod_situacao_atendimento = (
+select
+id_situacao_atendimento
+from
+sigh.situacoes_atendimentos
+where
+tipo_situacao_atendimento = 'F' order by 1 limit 1 -- defini situação como fechado
+)
+where
+data_atendimento <= (cast(now() as date) - 1) --defini a qtd de dias que quer manter as fias abertas
+and
+data_alta is null
+and
+(tipo_atend = 'EXT' or tipo_atend = 'AMB')
+and
+cod_unidade <> '50' -- Não fechar fias Pronto Socorro
+and
+cod_paciente <> 45977 -- Paciente hemodialise: Antonio Carlos de olive
+and
+cod_paciente <> 466959; -- Paciente Hemodialise: Cleia santos lorenzato
+
+commit;
